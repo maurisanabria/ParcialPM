@@ -4,7 +4,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -24,28 +23,26 @@ public class MainActivity extends AppCompatActivity {
         etPass = findViewById(R.id.etPass);
         btnLogin = findViewById(R.id.btnLogin);
 
-        dbHelper = new DBHelper(this); // abre / crea la DB
+        dbHelper = new DBHelper(this);
 
-        btnLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        btnLogin.setOnClickListener(v -> {
 
-                String usuario = etUser.getText().toString().trim();
-                String clave = etPass.getText().toString().trim();
+            String usuario = etUser.getText().toString().trim();
+            String clave = etPass.getText().toString().trim();
 
-                if (usuario.isEmpty() || clave.isEmpty()) {
-                    Toast.makeText(MainActivity.this, "Complete los campos", Toast.LENGTH_SHORT).show();
-                    return;
-                }
+            if (usuario.isEmpty() || clave.isEmpty()) {
+                Toast.makeText(this, "Complete los campos", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-                boolean valido = dbHelper.validarUsuario(usuario, clave);
+            boolean valido = dbHelper.validarUsuario(usuario, clave);
 
-                if (valido) {
-                    Toast.makeText(MainActivity.this, "Login correcto", Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(MainActivity.this, HomeActivity.class));
-                } else {
-                    Toast.makeText(MainActivity.this, "Usuario o clave incorrectos", Toast.LENGTH_SHORT).show();
-                }
+            if (valido) {
+                Toast.makeText(this, "Login correcto", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(MainActivity.this, HomeActivity.class));
+                finish();
+            } else {
+                Toast.makeText(this, "Usuario o clave incorrectos", Toast.LENGTH_SHORT).show();
             }
         });
     }

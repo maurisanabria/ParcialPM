@@ -4,7 +4,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -13,8 +12,8 @@ import android.widget.Toast;
 public class HomeActivity extends AppCompatActivity {
 
     EditText etTexto;
-    Button btnGuardar, btnBorrar, btnCerrarSesion;
-    TextView tvUltimo, tvCantidad;
+    Button btnGuardar, btnVerReg, btnBorrar, btnCerrarSesion;
+    TextView tvUltimoRegistro, tvCantidad;
     DBHelper dbHelper;
 
     @Override
@@ -22,80 +21,81 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
+        // IDs EXACTOS de tu XML
         etTexto = findViewById(R.id.etTexto);
         btnGuardar = findViewById(R.id.btnGuardar);
+        btnVerReg = findViewById(R.id.btnVerReg);
         btnBorrar = findViewById(R.id.btnBorrar);
         btnCerrarSesion = findViewById(R.id.btnCerrarSesion);
-        tvUltimo = findViewById(R.id.tvUltimoRegistro);
+        tvUltimoRegistro = findViewById(R.id.tvUltimoRegistro);
         tvCantidad = findViewById(R.id.tvCantidad);
 
         dbHelper = new DBHelper(this);
 
-        // Cargar último registro y cantidad al entrar
-        actualizarUltimoYCantidad();
+        // GUARDAR
+        btnGuardar.setOnClickListener(v -> {
+            String texto = etTexto.getText().toString().trim();
 
-        // Guardar registro
-        btnGuardar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+            if (texto.isEmpty()) {
+                Toast.makeText(this, "Ingrese una tarea para guardar", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-                String texto = etTexto.getText().toString().trim();
+            boolean guardado = dbHelper.insertarRegistro(texto);
 
-                if (texto.isEmpty()) {
-                    Toast.makeText(HomeActivity.this, "Ingrese un texto", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                boolean guardado = dbHelper.insertarRegistro(texto);
-
-                if (guardado) {
-                    Toast.makeText(HomeActivity.this, "Registro guardado", Toast.LENGTH_SHORT).show();
-                    etTexto.setText("");
-                    actualizarUltimoYCantidad();
-                } else {
-                    Toast.makeText(HomeActivity.this, "Error al guardar", Toast.LENGTH_SHORT).show();
-                }
+            if (guardado) {
+                Toast.makeText(this, "Tarea guardada", Toast.LENGTH_SHORT).show();
+                etTexto.setText("");
+                actualizarInfo();
+            } else {
+                Toast.makeText(this, "Error al guardar", Toast.LENGTH_SHORT).show();
             }
         });
 
-        // Borrar todos los registros
-        btnBorrar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                boolean borrado = dbHelper.borrarTodosLosRegistros();
-
-                if (borrado) {
-                    Toast.makeText(HomeActivity.this, "Registros borrados", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(HomeActivity.this, "No había registros para borrar", Toast.LENGTH_SHORT).show();
-                }
-
-                actualizarUltimoYCantidad();
-            }
+        // VER REGISTROS
+        btnVerReg.setOnClickListener(v -> {
+            startActivity(new Intent(HomeActivity.this, ListaRegistrosActivity.class));
         });
 
-        // Cerrar sesión (volver al login)
-        btnCerrarSesion.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent i = new Intent(HomeActivity.this, MainActivity.class);
-                startActivity(i);
-                finish(); // cierra la pantalla actual
+        // BORRAR TODOS
+        btnBorrar.setOnClickListener(v -> {
+            boolean hubo = dbHelper.borrarTodosLosRegistros();
+
+            if (hubo) {
+                Toast.makeText(this, "Registros eliminados", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "No hay registros para borrar", Toast.LENGTH_SHORT).show();
             }
+
+            actualizarInfo();
         });
+
+        // CERRAR SESIÓN
+        btnCerrarSesion.setOnClickListener(v -> {
+            Toast.makeText(this, "Sesión cerrada", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(HomeActivity.this, MainActivity.class));
+            finish();
+        });
+
+        actualizarInfo();
     }
 
-    private void actualizarUltimoYCantidad() {
+    @Override
+    protected void onResume() {
+        super.onResume();
+        actualizarInfo();
+    }
+
+    private void actualizarInfo() {
         String ultimo = dbHelper.obtenerUltimoRegistro();
         int cantidad = dbHelper.contarRegistros();
 
-        if (!ultimo.isEmpty()) {
-            tvUltimo.setText("Último registro: " + ultimo);
+        if (ultimo == null || ultimo.isEmpty()) {
+            tvUltimoRegistro.setText("Última tarea registrada: (no hay registros)");
         } else {
-            tvUltimo.setText("Último registro: (no hay registros)");
+            tvUltimoRegistro.setText("Última tarea registrada: " + ultimo);
         }
 
-        tvCantidad.setText("Total de registros: " + cantidad);
+        tvCantidad.setText("Total de tareas registradas: " + cantidad);
     }
 }
-
